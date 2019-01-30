@@ -42,7 +42,6 @@ public class ActiveMQClient implements QueueClient, MessageListener {
     }
 
     private void connectToBroker() {
-        this.logger.info(System.getenv().toString());
         this.username = System.getenv("AMQ_USERNAME");
         this.readQueue = System.getenv("READ_QUEUE");
         this.myQueueName = System.getenv("DEFAULT_WRITE_QUEUE");
@@ -53,7 +52,7 @@ public class ActiveMQClient implements QueueClient, MessageListener {
         this.logger.info("Default queue is "+this.myQueueName);
         this.logger.info("Read queue is "+this.readQueue);
         this.logger.info("Username is "+this.username);
-        this.logger.info("Password is "+this.password);
+        this.logger.debug("Password is "+this.password);
         this.logger.info("Broker URL is "+this.brokerURL);
         this.logger.info("Time to live "+this.timeToLive);
         this.logger.info("Disable reads "+this.disableReads);
