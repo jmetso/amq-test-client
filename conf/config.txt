@@ -1,0 +1,9 @@
+database.url=jdbc:sqlite:db/bluetooth.db
+
+broker.url=ssl://ws-amq-janne-test.apps.ocpt1.sos.eu:443
+broker.username=admin
+broker.password=admin
+broker.my-queue=my-queue
+broker.server-queuer=server-queue
+broker.disable-reads=false
+

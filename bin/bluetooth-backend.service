@@ -1,0 +1,12 @@
+[Unit]
+Description=Bluetooth Backend
+After=multi-user.target
+ 
+[Service]
+Type=simple
+User=pi
+ExecStart=/bin/sh /opt/bluetooth-backend/run.sh
+Restart=on-abort
+ 
+[Install]
+WantedBy=multi-user.target
