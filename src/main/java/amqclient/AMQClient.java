@@ -24,7 +24,6 @@ public class AMQClient {
     }
 
     public AMQClient() {
-        //ConfigUtils.init();
     }
 
     /*
