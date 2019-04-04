@@ -40,7 +40,7 @@ public class ActiveMQClient implements QueueClient, MessageListener {
         this.connectToBroker();
     }
 
-    private void connectToBroker() {
+    private boolean connectToBroker() {
         this.username = System.getenv("AMQ_USERNAME");
         this.readQueue = System.getenv("READ_QUEUE");
         this.myQueueName = System.getenv("DEFAULT_WRITE_QUEUE");
@@ -92,6 +92,7 @@ public class ActiveMQClient implements QueueClient, MessageListener {
             }
             i++;
         }
+        return successfulConnection;
     }
 
     @Override
@@ -105,21 +106,23 @@ public class ActiveMQClient implements QueueClient, MessageListener {
     }
 
     @Override
-    public void sendMessage(String payload) {
+    public boolean sendMessage(String payload) {
         try {
             this.logger.debug("Sending message: "+payload);
             TextMessage jmsMessage = this.session.createTextMessage(payload);
             DateTimeFormatter f = DateTimeFormatter.ofPattern("y-MM-dd H:mm:ss");
             this.logger.info("JMSExpiration: "+ LocalDateTime.ofEpochSecond((int)(System.currentTimeMillis()/1000+this.timeToLive), 0, ZoneOffset.ofHours(2)).format(f));
             this.producer.send(jmsMessage);
+            return true;
         } catch (javax.jms.JMSException e) {
             this.logger.warn("Connection to broker lost! Trying to reconnect!", e);
             this.connectToBroker();
+            return false;
         }
     }
 
     @Override
-    public void sendMessage(String queue, String payload) {
+    public boolean sendMessage(String queue, String payload) {
         try {
             this.logger.debug("Sending message: "+payload);
             MessageProducer producer = this.session.createProducer(this.session.createQueue(queue));
@@ -128,9 +131,11 @@ public class ActiveMQClient implements QueueClient, MessageListener {
             DateTimeFormatter f = DateTimeFormatter.ofPattern("y-MM-dd H:mm:ss");
             this.logger.info("JMSExpiration: "+ LocalDateTime.ofEpochSecond((int)(System.currentTimeMillis()/1000+this.timeToLive), 0, ZoneOffset.ofHours(2)).format(f));
             producer.send(jmsMessage);
+            return true;
         } catch (javax.jms.JMSException e) {
             this.logger.warn("Connection to broker lost! Trying to reconnect!", e);
             this.connectToBroker();
+            return false;
         }
     }
 
@@ -140,14 +145,18 @@ public class ActiveMQClient implements QueueClient, MessageListener {
     }
 
     @Override
-    public void reconnect() {
-        connectToBroker();
+    public boolean reconnect() {
+        return connectToBroker();
     }
 
     @Override
     public boolean disconnect() {
         try {
+            this.consumer.close();
+            this.producer.close();
+            this.session.close();
             this.connection.close();
+            this.logger.info("Disconnected from broker.");
             return true;
         } catch(javax.jms.JMSException e) {
             this.logger.error("Failed do disconnect.", e);

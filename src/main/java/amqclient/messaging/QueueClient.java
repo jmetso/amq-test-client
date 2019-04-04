@@ -7,10 +7,10 @@ package amqclient.messaging;
 public interface QueueClient {
 
     void init();
-    void sendMessage(String payload);
-    void sendMessage(String queue, String payload);
+    boolean sendMessage(String payload);
+    boolean sendMessage(String queue, String payload);
     void setMessagingClient(MessagingClientImpl messagingClient);
-    void reconnect();
+    boolean reconnect();
     boolean disconnect();
 
 }
