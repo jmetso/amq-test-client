@@ -11,5 +11,6 @@ public interface QueueClient {
     void sendMessage(String queue, String payload);
     void setMessagingClient(MessagingClientImpl messagingClient);
     void reconnect();
+    boolean disconnect();
 
 }

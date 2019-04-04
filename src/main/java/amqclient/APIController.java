@@ -35,6 +35,11 @@ public class APIController {
         return new ResponseEntity<>(true, HttpStatus.OK);
     }
 
+    @RequestMapping(value = "/amq/api/v1/disconnect", produces= MediaType.APPLICATION_JSON_VALUE, method= RequestMethod.GET)
+    public ResponseEntity<Boolean> disconnect() {
+        return new ResponseEntity<>(this.client.disconnect(), HttpStatus.OK);
+    }
+
     @Autowired
     public void setQueueClient(QueueClient queueClient) {
         this.client = queueClient;

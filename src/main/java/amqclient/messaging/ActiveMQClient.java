@@ -145,6 +145,17 @@ public class ActiveMQClient implements QueueClient, MessageListener {
     }
 
     @Override
+    public boolean disconnect() {
+        try {
+            this.connection.close();
+            return true;
+        } catch(javax.jms.JMSException e) {
+            this.logger.error("Failed do disconnect.", e);
+            return false;
+        }
+    }
+
+    @Override
     public void onMessage(Message message) {
         if(!this.disableReads) {
             if (message instanceof TextMessage) {
