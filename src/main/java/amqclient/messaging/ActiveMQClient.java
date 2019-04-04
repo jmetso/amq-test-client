@@ -21,6 +21,7 @@ public class ActiveMQClient implements QueueClient, MessageListener {
     private Logger logger = LoggerFactory.getLogger(ActiveMQClient.class);
 
     private int timeToLive = 100;
+    private int connectionAttempts = 1;
     private boolean disableReads = true;
     public String username = "username";
     public String password = "password";
@@ -48,8 +49,9 @@ public class ActiveMQClient implements QueueClient, MessageListener {
         this.disableReads = Boolean.parseBoolean(System.getenv("DISABLE_READS"));
         if(System.getenv("TIME_TO_LIVE") != null) {
             this.timeToLive = Integer.parseInt(System.getenv("TIME_TO_LIVE"));
-        } else {
-            this.timeToLive = 10;
+        }
+        if(System.getenv("CONNECTION_ATTEMPTS") != null) {
+            this.connectionAttempts = Integer.parseInt(System.getenv("CONNECTION_ATTEMPTS"));
         }
         this.logger.info("Default queue is "+this.myQueueName);
         this.logger.info("Read queue is "+this.readQueue);
@@ -65,23 +67,25 @@ public class ActiveMQClient implements QueueClient, MessageListener {
         } else {
             connectionFactory = new ActiveMQConnectionFactory(this.username, this.password, this.brokerURL);
         }
-        try {
-            this.connection = connectionFactory.createConnection();
-            this.connection.start();
-            this.session = this.connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Destination readQueue = this.session.createQueue(this.readQueue);
-            Destination writeQueue = this.session.createQueue(this.myQueueName);
-            this.consumer = this.session.createConsumer(readQueue);
-            this.producer = this.session.createProducer(writeQueue);
-            this.producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-            this.producer.setTimeToLive(this.timeToLive*1000);
-            this.logger.info("Connected to broker");
+        for(int i=0; i < this.connectionAttempts; ++i) {
+            try {
+                this.connection = connectionFactory.createConnection();
+                this.connection.start();
+                this.session = this.connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                Destination readQueue = this.session.createQueue(this.readQueue);
+                Destination writeQueue = this.session.createQueue(this.myQueueName);
+                this.consumer = this.session.createConsumer(readQueue);
+                this.producer = this.session.createProducer(writeQueue);
+                this.producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+                this.producer.setTimeToLive(this.timeToLive * 1000);
+                this.logger.info("Connected to broker");
 
-            if(!this.disableReads) {
-                this.consumer.setMessageListener(this);
+                if (!this.disableReads) {
+                    this.consumer.setMessageListener(this);
+                }
+            } catch (javax.jms.JMSException e) {
+                this.logger.error("Unable to connect to ActiveMQ!", e);
             }
-        } catch(javax.jms.JMSException e) {
-            this.logger.error("Unable to connect to ActiveMQ!", e);
         }
     }
 
