@@ -70,5 +70,10 @@ public class MessagingClientImplTest {
         public void reconnect() {
 
         }
+
+        @Override
+        public boolean disconnect() {
+            return false;
+        }
     }
 }
