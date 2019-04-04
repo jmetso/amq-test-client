@@ -52,8 +52,9 @@ public class MessagingClientImplTest {
         }
 
         @Override
-        public void sendMessage(String payload) {
+        public boolean sendMessage(String payload) {
             messages.add(payload);
+            return true;
         }
 
         @Override
@@ -62,13 +63,13 @@ public class MessagingClientImplTest {
         }
 
         @Override
-        public void sendMessage(String queue, String payload) {
-
+        public boolean sendMessage(String queue, String payload) {
+            return true;
         }
 
         @Override
-        public void reconnect() {
-
+        public boolean reconnect() {
+            return true;
         }
 
         @Override
