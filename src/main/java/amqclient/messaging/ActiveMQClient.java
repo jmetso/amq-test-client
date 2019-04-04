@@ -67,7 +67,10 @@ public class ActiveMQClient implements QueueClient, MessageListener {
         } else {
             connectionFactory = new ActiveMQConnectionFactory(this.username, this.password, this.brokerURL);
         }
-        for(int i=0; i < this.connectionAttempts; ++i) {
+        boolean successfulConnection = false;
+        int i = 0;
+        while(!successfulConnection && i < this.connectionAttempts) {
+            this.logger.info("Connection attempt: "+(i+1));
             try {
                 this.connection = connectionFactory.createConnection();
                 this.connection.start();
@@ -83,9 +86,11 @@ public class ActiveMQClient implements QueueClient, MessageListener {
                 if (!this.disableReads) {
                     this.consumer.setMessageListener(this);
                 }
+                successfulConnection = true;
             } catch (javax.jms.JMSException e) {
                 this.logger.error("Unable to connect to ActiveMQ!", e);
             }
+            i++;
         }
     }
 
