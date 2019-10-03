@@ -63,7 +63,6 @@ public class ActiveMQClient implements QueueClient, MessageListener {
         ConnectionFactory connectionFactory;
         if(this.brokerURL != null && this.brokerURL.startsWith("amqp")) {
             connectionFactory = new org.apache.qpid.jms.JmsConnectionFactory(this.username, this.password, this.brokerURL);
-            //connectionFactory = null;
         } else {
             connectionFactory = new ActiveMQConnectionFactory(this.username, this.password, this.brokerURL);
         }
@@ -75,15 +74,10 @@ public class ActiveMQClient implements QueueClient, MessageListener {
                 this.connection = connectionFactory.createConnection();
                 this.connection.start();
                 this.session = this.connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                Destination readQueue = this.session.createQueue(this.readQueue);
-                Destination writeQueue = this.session.createQueue(this.myQueueName);
-                this.consumer = this.session.createConsumer(readQueue);
-                this.producer = this.session.createProducer(writeQueue);
-                this.producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-                this.producer.setTimeToLive(this.timeToLive * 1000);
                 this.logger.info("Connected to broker");
-
                 if (!this.disableReads) {
+                    Destination readQueue = this.session.createQueue(this.readQueue);
+                    this.consumer = this.session.createConsumer(readQueue);
                     this.consumer.setMessageListener(this);
                 }
                 successfulConnection = true;
@@ -112,6 +106,12 @@ public class ActiveMQClient implements QueueClient, MessageListener {
             TextMessage jmsMessage = this.session.createTextMessage(payload);
             DateTimeFormatter f = DateTimeFormatter.ofPattern("y-MM-dd H:mm:ss");
             this.logger.info("JMSExpiration: "+ LocalDateTime.ofEpochSecond((int)(System.currentTimeMillis()/1000+this.timeToLive), 0, ZoneOffset.ofHours(2)).format(f));
+            if(this.producer == null) {
+                Destination writeQueue = this.session.createQueue(this.myQueueName);
+                this.producer = this.session.createProducer(writeQueue);
+                this.producer.setDeliveryMode(DeliveryMode.PERSISTENT);
+                this.producer.setTimeToLive(this.timeToLive * 1000);
+            }
             this.producer.send(jmsMessage);
             return true;
         } catch (javax.jms.JMSException e) {
@@ -152,8 +152,12 @@ public class ActiveMQClient implements QueueClient, MessageListener {
     @Override
     public boolean disconnect() {
         try {
-            this.consumer.close();
-            this.producer.close();
+            if(this.consumer != null) {
+                this.consumer.close();
+            }
+            if(this.producer != null) {
+                this.producer.close();
+            }
             this.session.close();
             this.connection.close();
             this.logger.info("Disconnected from broker.");
