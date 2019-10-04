@@ -1,6 +1,5 @@
 package amqclient;
 
-import amqclient.messaging.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -25,21 +24,5 @@ public class AMQClient {
 
     public AMQClient() {
     }
-
-    /*
-    private void run() {
-        DatabaseManager databaseManager = new DatabaseManagerImpl();
-
-        MessagingClient messagingClient = new MessagingClientImpl();
-
-        logger.info("Running AMQClient");
-        try {
-            while (true) {
-                Thread.sleep(60000);
-            }
-        } catch(InterruptedException e) {
-            logger.error("Unable to sleep!", e);
-        }
-    }*/
 
 }
